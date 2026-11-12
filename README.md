@@ -175,19 +175,19 @@ erDiagram
 
 ## 8. Capturas de Pantalla del Sistema
 
-> Coloca las capturas en una carpeta `docs/capturas/` y verifica que se visualicen a continuación:
+> Capturas tomadas con el sistema en funcionamiento (`php artisan serve`) sobre la base de datos del equipo:
 
 1. **Panel y Reportes (Ingresos por mes y membresías por vencer en 7 días):**
-   `![Panel y Reportes](docs/capturas/01-panel-reportes.png)`
+   ![Panel y Reportes](docs/capturas/01-panel-reportes.png)
 2. **Listado de Socios con Búsqueda y Filtros:**
-   `![Listado de Socios](docs/capturas/02-socios-listado-filtros.png)`
+   ![Listado de Socios](docs/capturas/02-socios-listado-filtros.png)
 3. **Formulario de Registro de Socio con Mensajes de Validación en Español:**
-   `![Validación de Socio](docs/capturas/03-socio-validacion-errores.png)`
+   ![Validación de Socio](docs/capturas/03-socio-validacion-errores.png)
 4. **Ficha de Detalle de Socio con Fotografía e Historial de Pagos:**
-   `![Ficha de Socio](docs/capturas/04-socio-ficha-detalle.png)`
+   ![Ficha de Socio](docs/capturas/04-socio-ficha-detalle.png)
 5. **Formulario de Edición de Socio:**
-   `![Edición de Socio](docs/capturas/05-socio-edicion.png)`
+   ![Edición de Socio](docs/capturas/05-socio-edicion.png)
 6. **Registro de Pago de Membresía y Extensión de Vencimiento:**
-   `![Registro de Pago](docs/capturas/06-pago-registro.png)`
+   ![Registro de Pago](docs/capturas/06-pago-registro.png)
 7. **Listado General de Pagos:**
-   `![Listado de Pagos](docs/capturas/07-pagos-listado.png)`
+   ![Listado de Pagos](docs/capturas/07-pagos-listado.png)
