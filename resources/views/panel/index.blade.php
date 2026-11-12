@@ -33,6 +33,12 @@
         </div>
     </div>
 
+    {{-- Exportación del estado de las membresías (activas y vencidas) a CSV o PDF --}}
+    <div class="cabecera-seccion">
+        <span class="texto-suave">Exportar el listado de socios con el estado de su membresía</span>
+        @include('partials.exportar', ['reporte' => 'socios'])
+    </div>
+
     {{-- Reporte obligatorio Caso 6: Membresías que vencen en los próximos 7 días --}}
     <section class="tarjeta">
         <div class="cabecera-seccion">
@@ -42,7 +48,10 @@
                     Socios activos cuya fecha de vencimiento está entre {{ today()->format('d/m/Y') }} y {{ today()->addDays(7)->format('d/m/Y') }}
                 </span>
             </div>
-            <span class="insignia insignia--alerta">{{ $sociosPorVencer->count() }} por vencer</span>
+            <div class="acciones-linea">
+                <span class="insignia insignia--alerta">{{ $sociosPorVencer->count() }} por vencer</span>
+                @include('partials.exportar', ['reporte' => 'por-vencer'])
+            </div>
         </div>
 
         @if ($sociosPorVencer->isEmpty())
@@ -100,7 +109,10 @@
         <section class="tarjeta">
             <div class="cabecera-seccion">
                 <h2>Ingresos por mes</h2>
-                <a href="{{ route('pagos.index') }}" class="texto-suave">Ver todos los pagos ›</a>
+                <div class="acciones-linea">
+                    <a href="{{ route('pagos.index') }}" class="texto-suave">Ver todos los pagos ›</a>
+                    @include('partials.exportar', ['reporte' => 'ingresos'])
+                </div>
             </div>
 
             @if ($ingresosPorMes->isEmpty())
