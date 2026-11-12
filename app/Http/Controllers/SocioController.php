@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSocioRequest;
+use App\Http\Requests\UpdateSocioRequest;
 use App\Models\Pago;
 use App\Models\Plan;
 use App\Models\Socio;
@@ -10,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /**
@@ -126,5 +128,42 @@ class SocioController extends Controller
         ]);
 
         return view('socios.show', compact('socio'));
+    }
+
+    /**
+     * [CRUD-UPDATE] Muestra el formulario de edición de un socio existente.
+     */
+    public function edit(Socio $socio): View
+    {
+        $planes = Plan::orderBy('duracion_dias')->get();
+
+        return view('socios.edit', compact('socio', 'planes'));
+    }
+
+    /**
+     * [CRUD-UPDATE] Actualiza los datos de un socio y reemplaza su fotografía si se sube una nueva.
+     * [VALIDACION] Validado mediante UpdateSocioRequest.
+     * [ALMACENAMIENTO] Elimina físicamente la imagen anterior para evitar archivos huérfanos.
+     */
+    public function update(UpdateSocioRequest $request, Socio $socio): RedirectResponse
+    {
+        $datos = $request->validated();
+
+        if ($request->hasFile('imagen')) {
+            // [ALMACENAMIENTO] Si el socio ya tenía una fotografía en el servidor, se elimina físicamente.
+            if ($socio->imagen && Storage::disk('public')->exists($socio->imagen)) {
+                Storage::disk('public')->delete($socio->imagen);
+            }
+
+            $datos['imagen'] = $request->file('imagen')->store('socios', 'public');
+        } else {
+            unset($datos['imagen']);
+        }
+
+        $socio->update($datos);
+
+        return redirect()
+            ->route('socios.show', $socio)
+            ->with('exito', "Los datos de {$socio->nombre_completo} fueron actualizados correctamente.");
     }
 }
