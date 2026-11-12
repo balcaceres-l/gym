@@ -16,6 +16,8 @@ use Illuminate\View\View;
 
 /**
  * Controlador de recurso de la entidad principal (Socio).
+ *
+ * Operaciones CRUD completas: index, create, store, show, edit, update y destroy.
  */
 class SocioController extends Controller
 {
@@ -165,5 +167,24 @@ class SocioController extends Controller
         return redirect()
             ->route('socios.show', $socio)
             ->with('exito', "Los datos de {$socio->nombre_completo} fueron actualizados correctamente.");
+    }
+
+    /**
+     * [CRUD-DELETE] Elimina el registro del socio y borra físicamente su fotografía si existe.
+     * [ALMACENAMIENTO] Evita dejar imágenes huérfanas en storage/app/public/socios.
+     */
+    public function destroy(Socio $socio): RedirectResponse
+    {
+        $nombre = $socio->nombre_completo;
+
+        if ($socio->imagen && Storage::disk('public')->exists($socio->imagen)) {
+            Storage::disk('public')->delete($socio->imagen);
+        }
+
+        $socio->delete();
+
+        return redirect()
+            ->route('socios.index')
+            ->with('exito', "El socio {$nombre} y su historial fueron eliminados del sistema.");
     }
 }
