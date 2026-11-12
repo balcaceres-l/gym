@@ -17,6 +17,25 @@
                     Venció el {{ $socio->fecha_vencimiento->translatedFormat('d \d\e F \d\e Y') }}
                 @endif
             </p>
+
+            <div class="acciones-ficha">
+                @if (Route::has('pagos.create'))
+                    <a href="{{ route('pagos.create', ['socio_id' => $socio->id]) }}" class="boton boton--chico">+ Registrar pago</a>
+                @endif
+                <a href="{{ route('socios.edit', $socio) }}" class="boton boton--secundario boton--chico">Editar</a>
+
+                {{-- [CRUD-DELETE] [SEGURIDAD] Eliminación con confirmación y directiva @method('DELETE') --}}
+                <form
+                    action="{{ route('socios.destroy', $socio) }}"
+                    method="POST"
+                    class="form-en-linea"
+                    onsubmit="return confirm('¿Confirma que desea eliminar al socio {{ addslashes($socio->nombre_completo) }} y su historial de pagos?');"
+                >
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="boton boton--peligro boton--chico">Eliminar</button>
+                </form>
+            </div>
         </aside>
 
         <section class="tarjeta ficha__datos">
@@ -38,10 +57,15 @@
     {{-- Registros relacionados: historial de pagos del socio --}}
     <section class="tarjeta">
         <div class="cabecera-seccion">
-            <h2>Historial de pagos</h2>
-            <span class="texto-suave">
-                {{ $socio->pagos->count() }} {{ $socio->pagos->count() === 1 ? 'pago' : 'pagos' }} · Total ${{ number_format($socio->pagos->sum('monto'), 2) }}
-            </span>
+            <div>
+                <h2>Historial de pagos</h2>
+                <span class="texto-suave">
+                    {{ $socio->pagos->count() }} {{ $socio->pagos->count() === 1 ? 'pago' : 'pagos' }} · Total ${{ number_format($socio->pagos->sum('monto'), 2) }}
+                </span>
+            </div>
+            @if (Route::has('pagos.create'))
+                <a href="{{ route('pagos.create', ['socio_id' => $socio->id]) }}" class="boton boton--chico">+ Registrar pago / Renovar</a>
+            @endif
         </div>
 
         @if ($socio->pagos->isEmpty())
