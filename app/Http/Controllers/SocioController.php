@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSocioRequest;
+use App\Models\Pago;
 use App\Models\Plan;
 use App\Models\Socio;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -36,6 +41,76 @@ class SocioController extends Controller
         $planes = Plan::orderBy('duracion_dias')->get();
 
         return view('socios.index', compact('socios', 'planes', 'buscar', 'planId', 'estado'));
+    }
+
+    /**
+     * [CRUD-CREATE] Muestra el formulario para registrar un nuevo socio.
+     */
+    public function create(): View
+    {
+        $socio = new Socio([
+            'fecha_inscripcion' => today(),
+        ]);
+        $planes = Plan::orderBy('duracion_dias')->get();
+        $metodos = Pago::METODOS;
+
+        return view('socios.create', compact('socio', 'planes', 'metodos'));
+    }
+
+    /**
+     * [CRUD-CREATE] Almacena un nuevo socio, su fotografía y su pago inicial de membresía.
+     * [VALIDACION] Validado mediante StoreSocioRequest.
+     * [REGLA-NEGOCIO] Calcula la fecha de vencimiento en el servidor según la duración del plan.
+     * [ALMACENAMIENTO] Guarda la imagen subida en el disco público de Laravel Storage.
+     */
+    public function store(StoreSocioRequest $request): RedirectResponse
+    {
+        $datos = $request->validated();
+        $plan = Plan::findOrFail($datos['plan_id']);
+
+        $fechaInscripcion = Carbon::parse($datos['fecha_inscripcion'])->startOfDay();
+        // [REGLA-NEGOCIO] La fecha de vencimiento inicial se calcula en el servidor según la duración del plan.
+        $fechaVencimiento = $fechaInscripcion->copy()->addDays($plan->duracion_dias);
+
+        // [ALMACENAMIENTO] Si se cargó una fotografía, se guarda en storage/app/public/socios.
+        $rutaImagen = null;
+        if ($request->hasFile('imagen')) {
+            $rutaImagen = $request->file('imagen')->store('socios', 'public');
+        }
+
+        $metodoInicial = $datos['metodo_pago_inicial'] ?? 'efectivo';
+
+        $socio = DB::transaction(function () use ($datos, $plan, $fechaInscripcion, $fechaVencimiento, $rutaImagen, $metodoInicial) {
+            $nuevoSocio = Socio::create([
+                'plan_id'           => $plan->id,
+                'dui'               => $datos['dui'],
+                'nombres'           => $datos['nombres'],
+                'apellidos'         => $datos['apellidos'],
+                'fecha_nacimiento'  => $datos['fecha_nacimiento'],
+                'telefono'          => $datos['telefono'],
+                'correo'            => $datos['correo'],
+                'fecha_inscripcion' => $fechaInscripcion->toDateString(),
+                'fecha_vencimiento' => $fechaVencimiento->toDateString(),
+                'imagen'            => $rutaImagen,
+            ]);
+
+            // [REGLA-NEGOCIO] Se registra el pago inicial con el precio exacto del plan contratado.
+            Pago::create([
+                'socio_id'       => $nuevoSocio->id,
+                'plan_id'        => $plan->id,
+                'fecha_pago'     => $fechaInscripcion->toDateString(),
+                'monto'          => $plan->precio,
+                'metodo'         => $metodoInicial,
+                'periodo_inicio' => $fechaInscripcion->toDateString(),
+                'periodo_fin'    => $fechaVencimiento->toDateString(),
+            ]);
+
+            return $nuevoSocio;
+        });
+
+        return redirect()
+            ->route('socios.show', $socio)
+            ->with('exito', "El socio {$socio->nombre_completo} fue registrado exitosamente con el plan {$plan->nombre}.");
     }
 
     /**
