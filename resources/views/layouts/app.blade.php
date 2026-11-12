@@ -17,6 +17,7 @@
             <nav class="menu" aria-label="Menú principal">
                 <a href="{{ route('panel') }}" @class(['menu__enlace', 'activo' => request()->routeIs('panel')])>Panel</a>
                 <a href="{{ route('socios.index') }}" @class(['menu__enlace', 'activo' => request()->routeIs('socios.*')])>Socios</a>
+                <a href="{{ route('pagos.index') }}" @class(['menu__enlace', 'activo' => request()->routeIs('pagos.*')])>Pagos</a>
                 <a href="{{ route('planes.index') }}" @class(['menu__enlace', 'activo' => request()->routeIs('planes.*')])>Planes</a>
             </nav>
         </div>
