@@ -66,14 +66,36 @@ class Socio extends Model
         return Attribute::get(fn () => $this->fecha_nacimiento?->age);
     }
 
-    // [ENCAPSULAMIENTO] La membresía está activa mientras la fecha de vencimiento no haya pasado.
+    // [REGLA-NEGOCIO] [ENCAPSULAMIENTO] La membresía está activa mientras la fecha de vencimiento no haya pasado.
     public function estaActiva(): bool
     {
         return $this->fecha_vencimiento !== null
             && $this->fecha_vencimiento->endOfDay()->isFuture();
     }
 
-    // [ENCAPSULAMIENTO] Texto del estado para mostrar en las vistas.
+    // [REGLA-NEGOCIO] Determina si la membresía está activa y vence en los próximos 7 días.
+    public function estaPorVencer(int $dias = 7): bool
+    {
+        if (! $this->estaActiva()) {
+            return false;
+        }
+
+        return $this->fecha_vencimiento->startOfDay()->lte(today()->addDays($dias));
+    }
+
+    // [ENCAPSULAMIENTO] Días restantes hasta el vencimiento (negativo si ya venció).
+    protected function diasRestantes(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->fecha_vencimiento) {
+                return 0;
+            }
+
+            return (int) today()->diffInDays($this->fecha_vencimiento->startOfDay(), false);
+        });
+    }
+
+    // [REGLA-NEGOCIO] [ENCAPSULAMIENTO] Texto del estado para mostrar en las vistas.
     protected function estadoMembresia(): Attribute
     {
         return Attribute::get(fn () => $this->estaActiva() ? 'Activa' : 'Vencida');
@@ -100,5 +122,31 @@ class Socio extends Model
     public function scopeVencidos(Builder $query): Builder
     {
         return $query->whereDate('fecha_vencimiento', '<', today());
+    }
+
+    // [REGLA-NEGOCIO] Membresías que vencen en los próximos N días (por defecto 7 días).
+    public function scopePorVencer(Builder $query, int $dias = 7): Builder
+    {
+        return $query
+            ->whereDate('fecha_vencimiento', '>=', today())
+            ->whereDate('fecha_vencimiento', '<=', today()->addDays($dias));
+    }
+
+    // Filtro de búsqueda por nombres, apellidos, DUI o correo electrónico.
+    public function scopeBuscar(Builder $query, ?string $termino): Builder
+    {
+        $termino = trim((string) $termino);
+
+        if ($termino === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $subconsulta) use ($termino) {
+            $patron = "%{$termino}%";
+            $subconsulta->where('nombres', 'like', $patron)
+                ->orWhere('apellidos', 'like', $patron)
+                ->orWhere('dui', 'like', $patron)
+                ->orWhere('correo', 'like', $patron);
+        });
     }
 }
