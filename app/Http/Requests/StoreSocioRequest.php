@@ -73,6 +73,8 @@ class StoreSocioRequest extends FormRequest
             'imagen.image'                      => 'El archivo subido debe ser una imagen válida.',
             'imagen.mimes'                      => 'La fotografía debe ser de tipo JPG, JPEG, PNG o WEBP.',
             'imagen.max'                        => 'La fotografía no debe pesar más de 2 MB (2048 KB).',
+            // PHP rechaza el archivo antes de aplicar la regla "max" cuando supera upload_max_filesize (2 MB).
+            'imagen.uploaded'                   => 'La fotografía no pudo subirse: supera el tamaño máximo permitido de 2 MB (2048 KB).',
         ];
     }
 }
